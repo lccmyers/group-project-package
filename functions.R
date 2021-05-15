@@ -1,5 +1,6 @@
-library(tidyverse)
 library(factoextra)
+library(dplyr)
+library(ggplot2)
 
 d <- read_csv("data.csv", col_names = TRUE)
 
