@@ -13,6 +13,7 @@ library(readr)
 library(plotly)
 library(dplyr)
 library(factoextra)
+library(tidyverse)
 ```
 
 # Principal Component Analysis
@@ -125,6 +126,88 @@ ScoresByRank <- names(TestScoresRanked)
 pcaStudents$rotation[ScoresByRank,1] #Puts the negatives and positives back in
 ```
 
+Let's take a look at the PCA functions we created in our package *phylopca* - this package allows analysis at different taxonomic levels using PCA. First, we need to load in the custom dataset included with the package, which includes 13 numerical variables with data on 213 primates.
+
+```{r data}
+d <- read_csv("data.csv", col_names = TRUE)
+head(d)
+```
+
+Before we run a PCA, we need to get rid of the NA values in the dataset, as the PCA won't run if they're there.
+
+```{r nas}
+d<-na.omit(d)
+```
+
+Now, lets look at the *pca.family()* function
+
+```{r pca fam}
+pca.family<-function(data, family.name){
+  data<-na.omit(data)
+  dfam<-filter(data, Family==family.name)
+  pcafam<-prcomp(Filter(is.numeric, dfam), center=T, scale=T)
+  return(summary(pcafam))
+}
+```
+
+This function removes NAs, filters the data by a specified family name, performs a PCA on the filtered data, and returns a summary of the PCA.
+
+
+Now let's take a look at the *pca.superfamily()* function
+
+```{r pca superfam}
+pca.superfamily<-function(data, superfamily.name){
+  data<-na.omit(data)
+  dsup<-filter(data, Superfamily==superfamily.name)
+  pcasup<-prcomp(Filter(is.numeric, dsup), center=T, scale=T)
+  return(summary(pcasup))
+}
+```
+
+This function does the same thing as *pca.family()*, but requires a superfamily to be specified instead of a family. Let's test out these functions.
+
+```{r testing pcas}
+pca.family(d, "Cercopithecidae")
+
+pca.superfamily(d, "Ceboidea")
+```
+
+Now, let's take a look at the sister functions *graph.family()* and *graph.superfamily()* that pair with the PCA functions and allow visualization of the analysis.
+
+```{r graph functions}
+graph.family<-function(data, family.name){
+  data<-na.omit(data)
+  dfam<-filter(data, Family==family.name)
+  pcafam<-prcomp(Filter(is.numeric, dfam), center=T, scale=T)
+  fviz_pca_ind(pcafam, geom.ind = "point", pointshape = 21,
+  pointsize = 2, fill.ind = dfam$Genus, invisible = "quali", palette = "pal8",
+  addEllipses = T, legend.title="Genus") + labs(title = "PCA", x = "PC1", y = "PC2")
+}
+
+graph.superfamily<-function(data, superfamily.name){
+  data<-na.omit(data)
+  dsup<-filter(data, Superfamily==superfamily.name)
+  pcasup<-prcomp(Filter(is.numeric, dsup), center=T, scale=T)
+  fviz_pca_ind(pcasup, geom.ind = "point", pointshape = 21,
+  pointsize = 2, fill.ind = dsup$Family, invisible = "quali", palette = "pal8",
+  addEllipses = T, legend.title="Family") + labs(title = "PCA", x = "PC1", y = "PC2")
+}
+```
+
+These functions run PCAs on specified families and superfamilies, and then graph the PCAs with ellipses around each respective genus or family. Let's test out these functions.
+
+```{r testing graphs}
+graph.family(d, "Cercopithecidae")
+
+graph.superfamily(d, "Ceboidea")
+```
+
+Note: these functions can't put an ellipse around datapoints if there are less than or equal to 2 datapoints. These functions are also customizable with ggplot2 functions, let's try that out.
+
+```{r customizing graph}
+
+graph.superfamily(d, "Ceboidea") + labs(title="PCA in Ceboidea")
+```
 
 
 
@@ -132,9 +215,3 @@ pcaStudents$rotation[ScoresByRank,1] #Puts the negatives and positives back in
 
 
 
-
-## References
-
-* Starmer, J. [StatQuest]. (2017, November 27). *StatQuest: PCA in R* [Video]. YouTube. https://www.youtube.com/watch?v=0Jp4gsfOLMs
-
-* Starmer, J.[StatQuest]. (2018, April 2). *StatQuest: Principal Component Analysis (PCA), Step-by-Step* [Video]. YouTube. https://www.youtube.com/watch?v=FgakZw6K1QQ
