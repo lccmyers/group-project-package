@@ -1,5 +1,6 @@
-library(tidyverse)
 library(factoextra)
+library(dplyr)
+library(ggplot2)
 
 d <- read_csv("data.csv", col_names = TRUE)
 
@@ -42,7 +43,7 @@ pca.superfamily(d, "Ceboidea")
 
 graph.family(d, "Cercopithecidae")
 
-graph.superfamily(d, "Ceboidea")
+graph.superfamily(d, "Ceboidea") + labs(title="PCA1")
 
 
 #notes: ggplot functions can be added onto the graph functions using +

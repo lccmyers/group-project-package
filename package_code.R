@@ -8,4 +8,5 @@ library(roxygen2)
 library(usethis)
 library(tidyverse)
 
+has_devel()
 
