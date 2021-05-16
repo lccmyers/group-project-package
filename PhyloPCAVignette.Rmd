@@ -1,0 +1,134 @@
+---
+title: "Principal Component Analysis Vignette"
+author: "Lydia Myers & Gabrielle Bueno"
+date: "5/15/2021"
+output: html_document
+---
+
+
+Load in libraries
+```{r}
+library(ggplot2)
+library(readr)
+library(plotly)
+library(dplyr)
+library(factoextra)
+```
+
+# Principal Component Analysis
+
+## What is PCA? 
+
+**Principal Component Analysis**, or **PCA**, is a statistical method that is especially useful for working with large datasets. This is because PCA is a *dimensionality reduction method*: it reduces the dimensionality of large datasets, meaning it reduces the number of variables. To reduce the amount of information in a dataset and make that data easier to work with, test, and visualize, a PCA reduces the number of variables in a dataset to a more manageable size by collapsing very similar correlated variables into new ones, called **Principal Components**. This sacrifices some accuracy, but it makes it easier to work with a large dataset, and it also informs you about how correlated and thus potentially redundant some of the variables really are. 
+
+To better understand this, let's first work on a simple example using a dataset I made. Then afterwards, we'll take you through an example using more complex, real world data.
+
+This dataset, called Student Scores, contains Math and English test scores for ten students. 
+```{r}
+StudentScores <- read_csv("https://github.com/lccmyers/group-project-package/raw/master/StudentScores.csv")
+StudentScores
+```
+
+Let’s look at each student’s score on their algebra test. Remember how I said earlier that variables in datasets can be called dimensions? This is a way to visualize that, because we have one variable plotted on one dimension. As you can see, students 1-5 all got very similar scores clustered around 100, and students 6-10 also got very similar scores, clustered around 50. 
+```{r}
+stripchart(StudentScores$AlgebraScore, xlab = "Algebra Scores")
+text(StudentScores$AlgebraScore, 1.1, labels = StudentScores$Student)
+```
+
+Now let’s look at two test scores (two dimensions!) by adding in Statistics scores. With these two variables we can now plot a 2D graph. You can see that again, students 1-5 cluster together, this time on the top right, and students 6-10 cluster on the lower left.
+```{r}
+fig2D <- ggplot(data = StudentScores, aes(x = AlgebraScore, y = StatisticsScore)) + geom_point() +
+  geom_text(label = rownames(StudentScores), nudge_x = 1, nudge_y = 1)
+fig2D
+```
+
+This isn’t looking like too much, right? Let’s put in a third dimension, students’ reading scores. Students 1-5 are now clustered down at the bottom, and students 6-10, up at the top. 
+```{r}
+fig3D <- plot_ly(data = StudentScores, x = StudentScores$AlgebraScore, y = StudentScores$StatisticsScore, 
+                 z = StudentScores$ReadingScore, type = "scatter3d", mode = "markers+text", color = ~StudentScores$Student)
+fig3D1 <- fig3D %>% layout(
+  scene = list(
+    xaxis = list(title = "Algebra Score"), 
+    yaxis = list(title = "Statistics Score"),
+    zaxis = list(title = "Reading Score")))
+fig3D1
+```
+
+But what if we want to look at four variables? We can’t plot four dimensions. And what if we have even more than four dimensions? Can’t plot those either! That’s where **PCA** comes in. PCA will allow us to take four or more measurements and reduce them into two plottable variables. That plot will show us how similar data cluster together, and it’s also going to tell us which variable is the most valuable for clustering these data. 
+
+`prcomp()` is a base R function that let's us perform a Principal Components Analysis. Let's go through some of what it tells us on this basic student dataset, so that we can get a better understanding of what it's doing and how it works. `prcomp()` gives us three things: 
+
+  * **X**, which contains the principal components,
+  
+  * **Standard Deviation**, which is the standard deviations of the principal components, and
+  
+  * **Rotation**, which tells us the matrix of variable loadings.
+  
+
+First, let's look at our principal components. Because we have four test scores--four variables--we have four principal components. The first principal component, **PC1**, accounts for the most variation in the original data. The second principal component, **PC2**, accounts for the second most variation, and so on.
+
+The first principal component is the one that's most strongly correlated with the most original variables. PC1 increases with both reading and poetry scores, which means that those two variables are correlated: as reading score increases, so does poetry score. PC1 also decreases with both algebra and stats scores, which means again that those two are strongly correlated: as a student's algebra score decreases, so does their statistics score.  
+
+If you look at PC2 and PC4, you can see that English scores are most correlated with PC2, and Math scores are most correlated with PC4. So PC2 is a better measurement of just English scores, and PC4 of just Math scores.
+```{r}
+StudentScore <- select(StudentScores, -all_of("Student")) #removing "Student" as a column, because otherwise the ID number will be calculated into the PCA
+rownames(StudentScore) <- paste("", 1:10)
+pcaStudents <- prcomp(StudentScore, scale = TRUE)
+pcaStudents
+```
+
+Now let's plot PC1 and PC2, because as I said earlier, these two account for the most variation in the original data, which is what we're interested in. PC1 is on the x-axis, and PC2 is on the y-axis. As you can see, 5 students are on the left side of the graph, and 5 are on the right side. I think it's a pretty good bet to guess that they're clustered the way we saw earlier, with students 1-5 on one side and students 6-10 on the other. But we want to know how meaningful this clustering really is. 
+```{r}
+plot(pcaStudents$x[,1], pcaStudents$x[,2], xlab = "PC1", ylab = "PC2")
+```
+
+To understand that, we're going to look at how much variation in the original data each principal component--but namely the first two PCs--account for. This is where standard deviation comes in. The standard deviation is the square root of the **eigenvalue**. 
+
+Let's take a step back for a second and talk about the calculations that are actually happening when you use the `prcomp()` function. First, the data is standardized by transforming each value into the same scale, which is done by subtracting the mean and dividing by the standard deviation for each value of each variable. Next, we create a **covariance matrix**. This is just a matrix that contains all the covariances of all the possible pairs you could make with the standardized values. This matrix provides a good representation of how the values vary with each other, which then allows for further calculation to see where within the values most of the variation is held. Next, we calculate the **eivengectors** and **eigenvalues**.
+
+**Eigenvectors** and **eigenvalues** are integral parts of principal component analyses.  They always come in pairs, so every eigenvector has an eigenvalue, and the number of eigenvectors and eigenvalues is always equal to the number of dimensions to the data. An eigenvector is simply a linear representation of where in the covariance matrix the most variance is held. And eigenvalues are numerical representations of the eigenvectors. Eigenvalues also represent how much variance is contained within each principal component. By ranking the principal components in order of the eigenvalues, lowest to highest, you get the order of the principal components.
+
+To understand the variation each principal component accounts for, we're going to take the square of the standard deviation for each. We're then going to calculate the percentage of variation each principal component accounts for using those standard deviations, just because that's easier to understand. And to visualize them, we will plot them using a barplot. 
+
+As you can see, PC1 accounts for nearly all the variation in the data. That means that there *is* a big difference between the two clusters we saw before. 
+```{r}
+pcaVariation <- pcaStudents$sdev^2
+pcaVarPercent <- round(pcaVariation/sum(pcaVariation)*100, 1)
+barplot(pcaVarPercent, xlab = "Principal Components", ylab = "Percentage of Explained Variance")
+```
+
+Now let's plot PC1 and PC2 again including this information. We're going to make a dataframe of the data that we will use to plot the info. There's one row per student, and an X and Y coordinate for each student. 
+```{r}
+pcaStudentPlot <- data.frame(Student=rownames(pcaStudents$x), X = pcaStudents$x[,1], Y = pcaStudents$x[,2])
+pcaStudentPlot
+```
+The x-axis tells us what percentage of the variation in the original data that PC1 explains—-in this case, 99.1%. The y-axis tells us what percentage of the variation in the original data that PC2 explains-—in this case, 0.4%. We’ve labeled the samples, so you can see that students 1 through 5 are on the left, and 6-10 on the right. 
+```{r}
+ggplot(data = pcaStudentPlot, aes(x = X, y = Y, label = Student)) + geom_text() +
+  xlab(paste("PC1 - ", pcaVarPercent[1], "%", sep = "")) + 
+  ylab(paste("PC2 - ", pcaVarPercent[2], "%", sep = "")) + 
+  theme_bw() + ggtitle("Students' Scores PCA Graph") 
+```
+
+Now we want to know which test scores actually have the largest effect. We’re going to determine that using **loading scores**. If you remember, earlier I mentioned that `prcomp()` gives us the rotation as one output, and that that’s the matrix of loadings for each variable. 
+
+Each principal component has loading scores. The loadings are the weight for each original variable used when calculating the principal components. Since PC1 explains 99.1% of the variation in the data—-nearly all of it--let’s just look at the loading scores for PC1.
+
+Variables, here test scores, that push students to the left of the graph will have large negative values, and the scores that push students to the right will have large positive values. We’re interested in the number’s magnitude, not just it’s sign, so we’re going to take the absolute values to compare them by magnitude without sign getting in the way, and then sort them. Then we can add sign back in. This way we can look at which test scores have the strongest values, from most to least, and know which direction they’re pushing students in. 
+
+So both Math scores, algebra and statistics, have negative loading scores, which push students 1-5 to the left side of the graph. The English tests, reading and poetry, have positive loading scores, pushing students 6-10 to the right side of the graph. However, we can see that each test score has a big and similar effect on the PCA. That's because I designed this dataset to have everything nicely correlated, to give an easy example. But now let's get into the real data, which is gonna be a bit messier. 
+```{r}
+StudentLoadingScores <- pcaStudents$rotation[,1]
+TestScores <- abs(StudentLoadingScores) #Absolute values, bc there are negative and postiive values
+TestScoresRanked <- sort(TestScores, decreasing = TRUE) #Sort by magnitude
+ScoresByRank <- names(TestScoresRanked)
+pcaStudents$rotation[ScoresByRank,1] #Puts the negatives and positives back in
+```
+
+
+
+
+
+
+
+
