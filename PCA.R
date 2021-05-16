@@ -3,7 +3,8 @@ library(factoextra)
 
 #reading in data
 d <- read_csv("data.csv", col_names = TRUE)
-
+View(d)
+d<-na.omit(d)
 
 ##PCAs
 
@@ -14,7 +15,7 @@ dfam<-filter(d, Family=="Cercopithecidae")
 
 pcafam<-prcomp(dfam[c(5:17)], center=T, scale=T)
 summary(pcafam)
-
+pcafam$rotation
 
 #family function
 pca.family<-function(data, family.name){

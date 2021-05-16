@@ -43,7 +43,7 @@ pca.superfamily(d, "Ceboidea")
 
 graph.family(d, "Cercopithecidae")
 
-graph.superfamily(d, "Ceboidea")
+graph.superfamily(d, "Ceboidea") + labs(title="PCA1")
 
 
 #notes: ggplot functions can be added onto the graph functions using +
