@@ -132,3 +132,9 @@ pcaStudents$rotation[ScoresByRank,1] #Puts the negatives and positives back in
 
 
 
+
+## References
+
+* Starmer, J. [StatQuest]. (2017, November 27). *StatQuest: PCA in R* [Video]. YouTube. https://www.youtube.com/watch?v=0Jp4gsfOLMs
+
+* Starmer, J.[StatQuest]. (2018, April 2). *StatQuest: Principal Component Analysis (PCA), Step-by-Step* [Video]. YouTube. https://www.youtube.com/watch?v=FgakZw6K1QQ
