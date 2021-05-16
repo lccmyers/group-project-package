@@ -126,7 +126,9 @@ ScoresByRank <- names(TestScoresRanked)
 pcaStudents$rotation[ScoresByRank,1] #Puts the negatives and positives back in
 ```
 
-Let's take a look at the PCA functions we created in our package *phylopca* - this package allows analysis at different taxonomic levels using PCA. First, we need to load in the custom dataset included with the package, which includes 13 numerical variables with data on 213 primates.
+# Phylogenetic PCA 
+
+Let's take a look at the PCA functions we created in our package `phylopca` - this package allows analysis at different taxonomic levels using PCA. First, we need to load in the custom dataset included with the package, which includes 13 numerical variables with data on 213 primates.
 
 ```{r data}
 d <- read_csv("data.csv", col_names = TRUE)
@@ -139,7 +141,7 @@ Before we run a PCA, we need to get rid of the NA values in the dataset, as the 
 d<-na.omit(d)
 ```
 
-Now, lets look at the *pca.family()* function
+Now, lets look at the `pca.family()` function
 
 ```{r pca fam}
 pca.family<-function(data, family.name){
@@ -153,7 +155,7 @@ pca.family<-function(data, family.name){
 This function removes NAs, filters the data by a specified family name, performs a PCA on the filtered data, and returns a summary of the PCA.
 
 
-Now let's take a look at the *pca.superfamily()* function
+Now let's take a look at the `pca.superfamily()` function
 
 ```{r pca superfam}
 pca.superfamily<-function(data, superfamily.name){
@@ -164,7 +166,7 @@ pca.superfamily<-function(data, superfamily.name){
 }
 ```
 
-This function does the same thing as *pca.family()*, but requires a superfamily to be specified instead of a family. Let's test out these functions.
+This function does the same thing as `pca.family()`, but requires a superfamily to be specified instead of a family. Let's test out these functions.
 
 ```{r testing pcas}
 pca.family(d, "Cercopithecidae")
@@ -172,7 +174,7 @@ pca.family(d, "Cercopithecidae")
 pca.superfamily(d, "Ceboidea")
 ```
 
-Now, let's take a look at the sister functions *graph.family()* and *graph.superfamily()* that pair with the PCA functions and allow visualization of the analysis.
+Now, let's take a look at the sister functions `graph.family()` and `graph.superfamily()` that pair with the PCA functions and allow visualization of the analysis.
 
 ```{r graph functions}
 graph.family<-function(data, family.name){
@@ -215,3 +217,10 @@ graph.superfamily(d, "Ceboidea") + labs(title="PCA in Ceboidea")
 
 
 
+
+
+## References
+
+* Starmer, J. [StatQuest]. (2017, November 27). *StatQuest: PCA in R* [Video]. YouTube. https://www.youtube.com/watch?v=0Jp4gsfOLMs
+
+* Starmer, J.[StatQuest]. (2018, April 2). *StatQuest: Principal Component Analysis (PCA), Step-by-Step* [Video]. YouTube. https://www.youtube.com/watch?v=FgakZw6K1QQ
